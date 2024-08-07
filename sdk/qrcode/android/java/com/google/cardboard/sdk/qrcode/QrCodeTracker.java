@@ -15,12 +15,31 @@
  */
 package com.google.cardboard.sdk.qrcode;
 
+import java.util.List;
+
 import zxingcpp.BarcodeReader;
 
 /**
-* Consume the item instance detected from an Activity or Fragment level by implementing the
-* Listener interface method onQrCodeDetected.
-*/
-public interface QrCodeTracker {
-  void onQrCodeDetected(BarcodeReader.Result qrCode);
+ * QrCodeTracker is used for tracking or reading a QR code. This is used to receive newly detected
+ * items, add a graphical representation to an overlay, update the graphics as the item changes, and
+ * remove the graphics when the item goes away.
+ */
+public class QrCodeTracker {
+  private final Listener listener;
+
+  /**
+   * Consume the item instance detected from an Activity or Fragment level by implementing the
+   * Listener interface method onQrCodeDetected.
+   */
+  public interface Listener {
+    void onQrCodeDetected(BarcodeReader.Result qrCode);
+  }
+
+  public QrCodeTracker(Listener listener) {
+    this.listener = listener;
+  }
+
+  public void onItemsDetected(List<BarcodeReader.Result> data) {
+    // TODO
+  }
 }

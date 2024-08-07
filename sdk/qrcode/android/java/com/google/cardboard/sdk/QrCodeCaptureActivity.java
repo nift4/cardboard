@@ -16,7 +16,6 @@
 package com.google.cardboard.sdk;
 
 import android.Manifest;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -30,28 +29,30 @@ import android.view.View;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import zxingcpp.BarcodeReader;
 import com.google.cardboard.sdk.qrcode.CardboardParamsUtils;
 import com.google.cardboard.sdk.qrcode.QrCodeContentProcessor;
 import com.google.cardboard.sdk.qrcode.QrCodeTracker;
 import com.google.cardboard.sdk.qrcode.camera.CameraSource;
-import com.google.cardboard.sdk.qrcode.camera.CameraSourcePreview;
+
 import java.io.IOException;
+import java.util.HashSet;
 
 /**
  * Manages the QR code capture activity. It scans permanently with the camera until it finds a valid
  * QR code.
  */
 public class QrCodeCaptureActivity extends AppCompatActivity
-    implements QrCodeTracker, QrCodeContentProcessor.Listener {
+    implements QrCodeTracker.Listener, QrCodeContentProcessor.Listener {
   private static final String TAG = QrCodeCaptureActivity.class.getSimpleName();
 
   // Permission request codes
   private static final int PERMISSIONS_REQUEST_CODE = 2;
 
   private CameraSource cameraSource;
-  private CameraSourcePreview cameraSourcePreview;
+  private PreviewView cameraSourcePreview;
 
   // Flag used to avoid saving the device parameters more than once.
   private static boolean qrCodeSaved = false;
@@ -143,15 +144,14 @@ public class QrCodeCaptureActivity extends AppCompatActivity
 
   /** Creates and starts the camera. */
   private void createCameraSource() {
-    Context context = getApplicationContext();
-
+    BarcodeReader.Options options = new BarcodeReader.Options();
     HashSet<BarcodeReader.Format> formats = new HashSet<>();
     formats.add(BarcodeReader.Format.QR_CODE);
-    BarcodeReader qrCodeDetector =
-        new BarcodeReader(new BarcodeReader.Options(formats));
-
-    // Creates and starts the camera.
-    cameraSource = new CameraSource(getApplicationContext(), qrCodeDetector, this);
+    options.setFormats(formats);
+    options.setTextMode(BarcodeReader.TextMode.PLAIN);
+    BarcodeReader qrCodeDetector = new BarcodeReader(options);
+    QrCodeTracker tracker = new QrCodeTracker(this);
+    cameraSource = new CameraSource(this, this, qrCodeDetector, tracker);
   }
 
   /** Restarts the camera. */
@@ -175,9 +175,9 @@ public class QrCodeCaptureActivity extends AppCompatActivity
   @Override
   protected void onPause() {
     super.onPause();
-    if (cameraSourcePreview != null) {
-      cameraSourcePreview.stop();
-      cameraSourcePreview.release();
+    if (cameraSource != null) {
+      cameraSource.release();
+      cameraSource = null;
     }
   }
 
@@ -185,7 +185,7 @@ public class QrCodeCaptureActivity extends AppCompatActivity
   private void startCameraSource() {
     if (cameraSource != null) {
       try {
-        cameraSourcePreview.start(cameraSource);
+        cameraSource.start(cameraSourcePreview);
       } catch (IOException e) {
         Log.e(TAG, "Unable to start camera source.", e);
         cameraSource.release();
@@ -233,7 +233,10 @@ public class QrCodeCaptureActivity extends AppCompatActivity
   public void onQrCodeSaved(boolean status) {
     if (status) {
       Log.d(TAG, "Device parameters saved in external storage.");
-      cameraSourcePreview.stop();
+      if (cameraSource != null) {
+        cameraSource.release();
+        cameraSource = null;
+      }
       nativeIncrementDeviceParamsChangedCount();
       finish();
     } else {
