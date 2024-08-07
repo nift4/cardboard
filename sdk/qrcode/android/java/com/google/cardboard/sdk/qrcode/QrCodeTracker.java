@@ -15,6 +15,8 @@
  */
 package com.google.cardboard.sdk.qrcode;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import zxingcpp.BarcodeReader;
@@ -26,6 +28,7 @@ import zxingcpp.BarcodeReader;
  */
 public class QrCodeTracker {
   private final Listener listener;
+  private final HashSet<BarcodeReader.Result> lastData = new HashSet<>();
 
   /**
    * Consume the item instance detected from an Activity or Fragment level by implementing the
@@ -40,6 +43,14 @@ public class QrCodeTracker {
   }
 
   public void onItemsDetected(List<BarcodeReader.Result> data) {
-    // TODO
+    for (BarcodeReader.Result result : data) {
+      if (lastData.stream().anyMatch(otherResult -> Arrays.equals(result.getBytes(), otherResult.getBytes()))) {
+        // This QR code already was detected in last frame, it's not new.
+        continue;
+      }
+      listener.onQrCodeDetected(result);
+    }
+    lastData.clear();
+    lastData.addAll(data);
   }
 }

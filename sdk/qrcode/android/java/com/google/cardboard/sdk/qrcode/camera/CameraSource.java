@@ -161,7 +161,7 @@ public class CameraSource implements Runnable {
 
     imageAnalysis =
             new ImageAnalysis.Builder()
-                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                     .setResolutionSelector(new ResolutionSelector.Builder()
                             .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
                             .setResolutionStrategy(new ResolutionStrategy(new Size(WIDTH, HEIGHT),
