@@ -94,7 +94,7 @@ public class CameraSource {
    * @param detector Expects a QR code detector.
    * @throws IllegalArgumentException When any of the parameter preconditions is unmet.
    */
-  public CameraSource(Context context, Detector<?> detector) {
+  public CameraSource(Context context, Detector<?> detector, QrCodeTracker listener) {
     // Prerequisite evaluation.
     if (context == null) {
       Log.e(TAG, "context is null.");
@@ -104,8 +104,13 @@ public class CameraSource {
       Log.e(TAG, "detector is null.");
       throw new IllegalArgumentException("No detector supplied.");
     }
+    if (listener == null) {
+      Log.e(TAG, "listener is null.");
+      throw new IllegalArgumentException("No listener supplied.");
+    }
 
     this.context = context;
+    this.listener = listener;
     frameProcessor = new FrameProcessingRunnable(detector);
     Log.i(TAG, "Successful CameraSource creation.");
   }
