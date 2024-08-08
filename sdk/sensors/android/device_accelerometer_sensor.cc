@@ -133,7 +133,6 @@ DeviceAccelerometerSensor::DeviceAccelerometerSensor()
   sensor_info_->sensor_manager =
       ASensorManager_getInstanceForPackage(Constants::kCardboardSdkPackageName);
 #else
-  // TODO: b/314792983 - Remove deprecated NDK methods.
   sensor_info_->sensor_manager = ASensorManager_getInstance();
 #endif
   sensor_info_->sensor = InitSensor(sensor_info_->sensor_manager);
